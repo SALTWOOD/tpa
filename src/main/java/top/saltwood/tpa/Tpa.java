@@ -50,7 +50,7 @@ public class Tpa {
                 .then(Commands.argument("player", EntityArgument.player())
                         .executes(context -> {
                             if (!context.getSource().isPlayer()) {
-                                context.getSource().sendFailure(Component.literal("Command source is not a plkayer!"));
+                                context.getSource().sendFailure(Component.literal("Command source is not a player!"));
                                 return 0;
                             }
                             Player src = context.getSource().getPlayer();
@@ -63,6 +63,23 @@ public class Tpa {
         dispatcher.register(Commands.literal("back")
                 .executes(context -> {
                     return teleBack(context.getSource());
+                })
+        );
+        dispatcher.register(Commands.literal("suicide")
+                .executes(context -> {
+                    if (!context.getSource().isPlayer()) {
+                        context.getSource().sendFailure(Component.literal("Command source is not a player!"));
+                        return 0;
+                    }
+                    Player player = context.getSource().getPlayer();
+                    if (player != null) {
+                        player.kill();
+                        context.getSource().sendSuccess(() -> Component.literal("Success!").withStyle(ChatFormatting.GREEN), true);
+                        return 1;
+                    } else {
+                        context.getSource().sendFailure(Component.literal("Failed! Player is null. This should never happen if you use this command correctly.").withStyle(ChatFormatting.RED));
+                        return 0;
+                    }
                 })
         );
     }
