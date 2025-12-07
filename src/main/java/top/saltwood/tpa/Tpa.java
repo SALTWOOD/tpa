@@ -38,7 +38,7 @@ public class Tpa {
                             ServerPlayer src = context.getSource().getPlayer();
                             ServerPlayer dst = EntityArgument.getPlayer(context, "player");
 
-                            if (false) {
+                            if (src == dst) {
                                 context.getSource().sendFailure(Component.literal("Cannot send request to yourself").withStyle(ChatFormatting.RED));
                                 return 0;
                             }
