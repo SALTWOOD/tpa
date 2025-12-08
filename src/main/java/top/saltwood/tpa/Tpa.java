@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
@@ -272,18 +273,26 @@ public class Tpa {
 
     private static int teleBack(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Only players can use this command").withStyle(ChatFormatting.RED));
+            source.sendFailure(Component.literal("Only players can use this command.").withStyle(ChatFormatting.RED));
             return 0;
         }
 
         DeathPositionManager.PlayerDeathLocation location = DeathPositionManager.getLocation(player.getUUID());
 
         if (location != null) {
-            player.teleportTo(location.x, location.y, location.z);
-            source.sendSuccess(() -> Component.literal("Teleported to last death location").withStyle(ChatFormatting.GREEN), true);
+            ServerLevel destinationWorld = player.server.getLevel(location.dimension);
+
+            if (destinationWorld == null) {
+                source.sendFailure(Component.literal("Cannot find the dimension you last died in.").withStyle(ChatFormatting.RED));
+                return 0;
+            }
+
+            player.teleportTo(destinationWorld, location.x, location.y, location.z, player.getYRot(), player.getXRot());
+            source.sendSuccess(() -> Component.literal("Teleported to your last death location.").withStyle(ChatFormatting.GREEN), true);
+
             return 1;
         } else {
-            source.sendFailure(Component.literal("No recorded death location").withStyle(ChatFormatting.RED));
+            source.sendFailure(Component.literal("You have no recorded death location.").withStyle(ChatFormatting.RED));
             return 0;
         }
     }
