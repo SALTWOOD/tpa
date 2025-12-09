@@ -2,7 +2,6 @@ package top.saltwood.tpa;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.ChatFormatting;
-import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -17,17 +16,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-
-import java.util.*;
 
 @Mod(Tpa.MODID)
 public class Tpa {
     public static final String MODID = "tpa";
     private static final TeleportRequestManager REQUEST_MANAGER = new TeleportRequestManager();
 
-    public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext, Commands.CommandSelection environment) {
+    public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
         // tpa command - request to teleport to target player
         dispatcher.register(Commands.literal("tpa")
                 .then(Commands.argument("player", EntityArgument.player())
@@ -38,6 +34,11 @@ public class Tpa {
                             }
                             ServerPlayer src = context.getSource().getPlayer();
                             ServerPlayer dst = EntityArgument.getPlayer(context, "player");
+
+                            if (src == null) {
+                                context.getSource().sendFailure(Component.literal("Player is null.").withStyle(ChatFormatting.RED));
+                                return 0;
+                            }
 
                             if (src == dst) {
                                 context.getSource().sendFailure(Component.literal("Cannot send request to yourself").withStyle(ChatFormatting.RED));
@@ -94,6 +95,11 @@ public class Tpa {
                             ServerPlayer src = context.getSource().getPlayer();
                             ServerPlayer dst = EntityArgument.getPlayer(context, "player");
 
+                            if (src == null) {
+                                context.getSource().sendFailure(Component.literal("Player is null.").withStyle(ChatFormatting.RED));
+                                return 0;
+                            }
+
                             if (src == dst) {
                                 context.getSource().sendFailure(Component.literal("Cannot send request to yourself").withStyle(ChatFormatting.RED));
                                 return 0;
@@ -146,6 +152,12 @@ public class Tpa {
                         return 0;
                     }
                     ServerPlayer player = context.getSource().getPlayer();
+
+                    if (player == null) {
+                        context.getSource().sendFailure(Component.literal("Player is null.").withStyle(ChatFormatting.RED));
+                        return 0;
+                    }
+
                     TeleportRequest request = REQUEST_MANAGER.getLatestRequestFor(player.getUUID());
 
                     if (request == null) {
@@ -177,6 +189,12 @@ public class Tpa {
                                 return 0;
                             }
                             ServerPlayer player = context.getSource().getPlayer();
+
+                            if (player == null) {
+                                context.getSource().sendFailure(Component.literal("Player is null.").withStyle(ChatFormatting.RED));
+                                return 0;
+                            }
+
                             ServerPlayer requester = EntityArgument.getPlayer(context, "player");
                             TeleportRequest request = REQUEST_MANAGER.getRequest(requester.getUUID(), player.getUUID());
 
@@ -213,6 +231,12 @@ public class Tpa {
                         return 0;
                     }
                     ServerPlayer player = context.getSource().getPlayer();
+
+                    if (player == null) {
+                        context.getSource().sendFailure(Component.literal("Player is null.").withStyle(ChatFormatting.RED));
+                        return 0;
+                    }
+
                     TeleportRequest request = REQUEST_MANAGER.getLatestRequestFor(player.getUUID());
 
                     if (request == null) {
@@ -232,6 +256,12 @@ public class Tpa {
                                 return 0;
                             }
                             ServerPlayer player = context.getSource().getPlayer();
+
+                            if (player == null) {
+                                context.getSource().sendFailure(Component.literal("Player is null.").withStyle(ChatFormatting.RED));
+                                return 0;
+                            }
+
                             ServerPlayer requester = EntityArgument.getPlayer(context, "player");
                             TeleportRequest request = REQUEST_MANAGER.getRequest(requester.getUUID(), player.getUUID());
 
@@ -303,7 +333,7 @@ public class Tpa {
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
-        registerCommands(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection());
+        registerCommands(event.getDispatcher());
     }
 
     private void onServerTick(TickEvent.ServerTickEvent event) {
