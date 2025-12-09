@@ -12,6 +12,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -79,6 +81,7 @@ public class Tpa {
                                             Component.literal("Click to deny").withStyle(ChatFormatting.RED))));
 
                             dst.sendSystemMessage(targetMsg.append(Component.literal(" ")).append(acceptBtn).append(Component.literal(" ")).append(denyBtn));
+                            dst.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.MASTER, 1.0f, 1.0f);
                             return 1;
                         })
                 )
