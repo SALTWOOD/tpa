@@ -142,6 +142,7 @@ public class Tpa {
                                             Component.literal("Click to deny").withStyle(ChatFormatting.RED))));
 
                             dst.sendSystemMessage(targetMsg.append(Component.literal(" ")).append(acceptBtn).append(Component.literal(" ")).append(denyBtn));
+                            dst.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.MASTER, 1.0f, 1.0f);
                             return 1;
                         })
                 )
