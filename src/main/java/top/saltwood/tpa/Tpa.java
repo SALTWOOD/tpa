@@ -169,13 +169,15 @@ public class Tpa {
                     }
 
                     if (request.isHere) {
-                        request.target.teleportTo(request.requester.getX(), request.requester.getY(), request.requester.getZ());
+                        PositionManager.setTpa(request.target);
+                        teleportTo(request.target, request.requester);
                         request.target.sendSystemMessage(Component.literal("Teleporting to ").withStyle(ChatFormatting.GREEN)
                                 .append(request.requester.getDisplayName().copy().withStyle(ChatFormatting.AQUA)));
                         request.requester.sendSystemMessage(Component.literal("Request accepted by ").withStyle(ChatFormatting.GREEN)
                                 .append(request.target.getDisplayName().copy().withStyle(ChatFormatting.AQUA)));
                     } else {
-                        request.requester.teleportTo(request.target.getX(), request.target.getY(), request.target.getZ());
+                        PositionManager.setTpa(request.requester);
+                        teleportTo(request.requester, request.target);
                         request.requester.sendSystemMessage(Component.literal("Teleporting to ").withStyle(ChatFormatting.GREEN)
                                 .append(request.target.getDisplayName().copy().withStyle(ChatFormatting.AQUA)));
                         request.target.sendSystemMessage(Component.literal("Request accepted by ").withStyle(ChatFormatting.GREEN)
@@ -207,13 +209,15 @@ public class Tpa {
                             }
 
                             if (request.isHere) {
-                                request.target.teleportTo(request.requester.getX(), request.requester.getY(), request.requester.getZ());
+                                PositionManager.setTpa(request.target);
+                                teleportTo(request.target, request.requester);
                                 request.target.sendSystemMessage(Component.literal("Teleporting to ").withStyle(ChatFormatting.GREEN)
                                         .append(request.requester.getDisplayName().copy().withStyle(ChatFormatting.AQUA)));
                                 request.requester.sendSystemMessage(Component.literal("Request accepted by ").withStyle(ChatFormatting.GREEN)
                                         .append(request.target.getDisplayName().copy().withStyle(ChatFormatting.AQUA)));
                             } else {
-                                request.requester.teleportTo(request.target.getX(), request.target.getY(), request.target.getZ());
+                                PositionManager.setTpa(request.requester);
+                                teleportTo(request.requester, request.target);
                                 request.requester.sendSystemMessage(Component.literal("Teleporting to ").withStyle(ChatFormatting.GREEN)
                                         .append(request.target.getDisplayName().copy().withStyle(ChatFormatting.AQUA)));
                                 request.target.sendSystemMessage(Component.literal("Request accepted by ").withStyle(ChatFormatting.GREEN)
@@ -281,9 +285,44 @@ public class Tpa {
                 )
         );
 
+        // tpaback command - teleport to last death location
+        dispatcher.register(Commands.literal("tpaback")
+                .executes(context -> {
+                    ServerPlayer player = context.getSource().getPlayer();
+                    if (player != null) {
+                        PositionManager.PlayerLocation death = PositionManager.getTpa(player.getUUID());
+                        if (death != null) {
+                            death.teleport(player);
+                            player.sendSystemMessage(Component.literal("Teleported to your last history teleportation.").withStyle(ChatFormatting.GREEN));
+                            return 1;
+                        } else {
+                            player.sendSystemMessage(Component.literal("You have no recorded history teleportation.").withStyle(ChatFormatting.RED));
+                            return 0;
+                        }
+                    }
+                    context.getSource().sendFailure(Component.literal("Only players can use this command.").withStyle(ChatFormatting.RED));
+                    return 0;
+                })
+        );
+
         // back command - teleport to last death location
         dispatcher.register(Commands.literal("back")
-                .executes(context -> teleBack(context.getSource()))
+                .executes(context -> {
+                    ServerPlayer player = context.getSource().getPlayer();
+                    if (player != null) {
+                        PositionManager.PlayerLocation death = PositionManager.getDeath(player.getUUID());
+                        if (death != null) {
+                            death.teleport(player);
+                            player.sendSystemMessage(Component.literal("Teleported to your last death location.").withStyle(ChatFormatting.GREEN));
+                            return 1;
+                        } else {
+                            player.sendSystemMessage(Component.literal("You have no recorded death location.").withStyle(ChatFormatting.RED));
+                            return 0;
+                        }
+                    }
+                    context.getSource().sendFailure(Component.literal("Only players can use this command.").withStyle(ChatFormatting.RED));
+                    return 0;
+                })
         );
 
         // suicide command
@@ -304,30 +343,9 @@ public class Tpa {
         );
     }
 
-    private static int teleBack(CommandSourceStack source) {
-        if (!(source.getEntity() instanceof ServerPlayer player)) {
-            source.sendFailure(Component.literal("Only players can use this command.").withStyle(ChatFormatting.RED));
-            return 0;
-        }
-
-        DeathPositionManager.PlayerDeathLocation location = DeathPositionManager.getLocation(player.getUUID());
-
-        if (location != null) {
-            ServerLevel destinationWorld = player.server.getLevel(location.dimension);
-
-            if (destinationWorld == null) {
-                source.sendFailure(Component.literal("Cannot find the dimension you last died in.").withStyle(ChatFormatting.RED));
-                return 0;
-            }
-
-            player.teleportTo(destinationWorld, location.x, location.y, location.z, player.getYRot(), player.getXRot());
-            source.sendSuccess(() -> Component.literal("Teleported to your last death location.").withStyle(ChatFormatting.GREEN), true);
-
-            return 1;
-        } else {
-            source.sendFailure(Component.literal("You have no recorded death location.").withStyle(ChatFormatting.RED));
-            return 0;
-        }
+    private static void teleportTo(ServerPlayer a, ServerPlayer b) {
+        ServerLevel world = b.serverLevel();
+        a.teleportTo(world, b.getX(), b.getY(), b.getZ(), b.getYRot(), b.getXRot());
     }
 
     public Tpa() {
